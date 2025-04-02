@@ -153,6 +153,50 @@ impl TaskManager {
             panic!("All applications completed!");
         }
     }
+
+    /// mmap only for apply memory
+    pub fn mmap(&self, start: usize, len: usize, port: usize) -> isize {
+        let mut inner = self.inner.exclusive_access();
+        let cur = inner.current_task;
+        inner.tasks[cur].memory_set.mmap(start, len, port)
+    }
+
+    /// mmap only for de memory
+    pub fn munmap(&self, start: usize, len: usize) -> isize {
+        let mut inner = self.inner.exclusive_access();
+        let cur = inner.current_task;
+        inner.tasks[cur].memory_set.munmap(start, len)
+    }
+
+    /// get syscall times
+    fn get_syscall_times(&self, sys_id: usize) -> isize {
+        let inner = self.inner.exclusive_access();
+        let current = inner.current_task;
+        let arr = inner.tasks[current].syscall_times.clone();
+        arr[sys_id]
+    }
+
+    /// add syscall times
+    fn add_syscall_times(&self, sys_id: usize) {
+        let mut inner = self.inner.exclusive_access();
+        let current = inner.current_task;
+        inner.tasks[current].syscall_times[sys_id] += 1;
+    }
+
+    /// read addr
+    fn read_id(&self, id: usize) -> isize {
+        let inner = self.inner.exclusive_access();
+        let current = inner.current_task;
+        inner.tasks[current].memory_set.read_id(id)
+    }
+
+    /// write addr
+    fn write_id(&self, id: usize, data: usize) -> isize {
+        let inner = self.inner.exclusive_access();
+        let current = inner.current_task;
+        inner.tasks[current].memory_set.write_id(id, data)
+    }
+
 }
 
 /// Run the first task in task list.
@@ -201,4 +245,34 @@ pub fn current_trap_cx() -> &'static mut TrapContext {
 /// Change the current 'Running' task's program break
 pub fn change_program_brk(size: i32) -> Option<usize> {
     TASK_MANAGER.change_current_program_brk(size)
+}
+
+/// mmap syscall
+pub fn mmap (start: usize, len: usize, port: usize) -> isize {
+    TASK_MANAGER.mmap(start, len, port)
+}
+
+/// munmap syscall
+pub fn munmap(start: usize, len: usize) -> isize {
+    TASK_MANAGER.munmap(start, len)
+}
+
+/// get syscall times
+pub fn get_syscall_times(sys_id: usize) -> isize {
+    TASK_MANAGER.get_syscall_times(sys_id)
+}
+
+/// add syscall times
+pub fn add_syscall_times(sys_id: usize) {
+    TASK_MANAGER.add_syscall_times(sys_id);
+}
+
+/// read addr
+pub fn read_id(id: usize) -> isize {
+    TASK_MANAGER.read_id(id)
+}
+
+/// write addr
+pub fn write_id(id: usize, data: usize) -> isize {
+    TASK_MANAGER.write_id(id, data)
 }
