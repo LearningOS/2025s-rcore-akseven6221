@@ -44,6 +44,28 @@ impl Processor {
     pub fn current(&self) -> Option<Arc<TaskControlBlock>> {
         self.current.as_ref().map(Arc::clone)
     }
+
+    /// mmap only for apply memory
+    pub fn mmap(&self, start: usize, len: usize, port: usize) -> isize {
+        let mut inner = self.current.as_ref().unwrap().inner_exclusive_access();
+        inner.memory_set.mmap(start, len, port)
+    }
+
+    /// mmap only for de memory
+    pub fn munmap(&self, start: usize, len: usize) -> isize {
+        let mut inner = self.current.as_ref().unwrap().inner_exclusive_access();
+        inner.memory_set.munmap(start, len)
+    }
+}
+
+/// mmap syscall
+pub fn mmap (start: usize, len: usize, port: usize) -> isize {
+    PROCESSOR.exclusive_access().mmap(start, len, port)
+}
+
+/// munmap syscall
+pub fn munmap(start: usize, len: usize) -> isize {
+    PROCESSOR.exclusive_access().munmap(start, len)
 }
 
 lazy_static! {

@@ -8,6 +8,7 @@ use crate::trap::{trap_handler, TrapContext};
 use alloc::sync::{Arc, Weak};
 use alloc::vec::Vec;
 use core::cell::RefMut;
+use crate::config::BIG_STRIDE;
 
 /// Task control block structure
 ///
@@ -68,6 +69,15 @@ pub struct TaskControlBlockInner {
 
     /// Program break
     pub program_brk: usize,
+
+    /// stride
+    pub stride: usize,
+
+    /// pass value
+    pub pass_value: usize,
+
+    /// priority
+    pub priority: usize,
 }
 
 impl TaskControlBlockInner {
@@ -118,6 +128,9 @@ impl TaskControlBlock {
                     exit_code: 0,
                     heap_bottom: user_sp,
                     program_brk: user_sp,
+                    stride: 0,
+                    pass_value: BIG_STRIDE / 16,
+                    priority: 16,
                 })
             },
         };
@@ -191,6 +204,9 @@ impl TaskControlBlock {
                     exit_code: 0,
                     heap_bottom: parent_inner.heap_bottom,
                     program_brk: parent_inner.program_brk,
+                    stride: parent_inner.stride,
+                    pass_value: parent_inner.pass_value,
+                    priority: parent_inner.priority,
                 })
             },
         });
